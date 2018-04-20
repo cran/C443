@@ -1,0 +1,16 @@
+f49b594368d27a8c78fb4f0ad2acfe17 *DESCRIPTION
+a6503d55866ec49221b8521330dc7511 *NAMESPACE
+166b64af524a6b4c7fd6295c92aaa977 *R/C443-internal.R
+41d6ce382b1a6d7c3293db94d6fbf47d *R/clustering.R
+4cc322eefaf1a7f89d9b2d419773c9a1 *R/drugs.R
+49ef7b0486775a49268b4a07db77fee1 *R/empirical_equivalence.R
+85082f0c00ddeb5a85c0d9012da1724d *R/growforest.R
+5d951ca12fd15686bc60271bd3a7c329 *R/matching_source.R
+1b1228c150aa8eb0eafcfb5dad087a2b *R/similarities.R
+762dba482b35bd12a89201138bb12a32 *data/drugs.RData
+629329eaabc25958cd5e0e50dc12a1a2 *man/clusterforest.Rd
+c09125e95e6dbc8a52622a134c26c0f0 *man/drugs.Rd
+66d8e0d08fed8ba24d8033ec414e64d1 *man/emp_eq.Rd
+4cb14ff9d027a5864874099f56944ae6 *man/growforest.Rd
+21d785d8ec2d827321f428a08e5e0057 *man/similarities.Rd
+c3265b03cd17481db72a10982ee8630a *man/treesource.Rd
