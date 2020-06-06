@@ -46,20 +46,14 @@ GrowTree <- function(x,y,BootsSample, minsplit = 40, minbucket = 20, maxdepth =3
  return(tree)
 }
 
-#Use functions to draw 15 boostrapsamples and grow a tree on each sample
-Boots<- lapply(1:15, function(k) DrawBoots(Pima.tr ,k))
-Trees <- lapply(1:15, function (i) GrowTree(x=c("npreg", "glu",  "bp",
+#Use functions to draw 20 boostrapsamples and grow a tree on each sample
+Boots<- lapply(1:10, function(k) DrawBoots(Pima.tr ,k))
+Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",
  "skin",  "bmi", "ped", "age"), y="type",
 Boots[[i]] ))
 
-#Turn the lists of dataframes and rpart trees to a forest object
-myforest<- forest(Pima.tr, Boots,Trees)
-
-#Calculate similarities between trees in forest, based on similarity measure m=1.
-Simmatrix1 <- treesimilarities(forest=myforest,  m=1)
-
-#cluster forest
-ClusterForest <- clusterforest(Simmatrix1, 1, 5)
+ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
+fromclus=1, toclus=5)
 plot(ClusterForest)
 plot(ClusterForest,2)
 }

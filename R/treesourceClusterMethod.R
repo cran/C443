@@ -5,7 +5,6 @@
 #' It visualizes the number of trees from each source that belong to each cluster.
 #' @param clusterforest The clusterforest object
 #' @param solution The solution
-#' @param source A vector with the source for each tree in the forest
 #' @return \item{multiplot}{For each value of the source, a bar plot with the number of trees that belong to each cluster}
 #' \item{heatmap}{A heatmap with for each value of the source, the number of trees that belong to each cluster}
 #' @export
@@ -38,31 +37,23 @@
 #'}
 #'
 #' #Draw bootstrap samples and grow trees
-#' BootsA<- lapply(1:3, function(k) DrawBoots(data_Amphet,k))
-#' BootsC<- lapply(1:3, function(k) DrawBoots(data_cocaine,k))
-#' BootsL<- lapply(1:3, function(k) DrawBoots(data_LSD,k))
-#' Boots = c(BootsA,BootsC,BootsL)
+#' BootsA<- lapply(1:5, function(k) DrawBoots(data_Amphet,k))
+#' BootsC<- lapply(1:5, function(k) DrawBoots(data_cocaine,k))
+#' Boots = c(BootsA,BootsC)
 #'
-#' TreesA <- lapply(1:3, function (i) GrowTree(x=c ("Age", "Gender", "Edu", "Neuro",
+#' TreesA <- lapply(1:5, function (i) GrowTree(x=c ("Age", "Gender", "Edu", "Neuro",
 #' "Extr", "Open", "Agree","Consc", "Impul","Sensat"), y="Amphet", BootsA[[i]] ))
-#' TreesC <- lapply(1:3, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro",
+#' TreesC <- lapply(1:5, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro",
 #' "Extr", "Open", "Agree", "Consc", "Impul","Sensat"), y="Coke", BootsC[[i]] ))
-#' TreesL <- lapply(1:3, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro",
-#' "Extr", "Open", "Agree", "Consc", "Impul","Sensat"), y="LSD", BootsL[[i]] ))
-#' Trees=c(TreesA,TreesC,TreesL)
+#' Trees=c(TreesA,TreesC)
 #'
-#' #Create forest object
-#' myforest<- forest(drugs, Boots,Trees)
-#'
-#' #calculate similarities
-#' Simmatrix1<- treesimilarities(forest=myforest, m=1)
-#'
-#' #Cluster
-#' Clusters<- clusterforest(Simmatrix1, 1, 2)
+#'#Cluster the trees
+#'ClusterForest<- clusterforest(fulldata=drugs,treedata=Boots,trees=Trees,m=1,
+#'fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5))
 #'
 #' #Link cluster result to known source of variation
-#' treesource(Clusters, 2, rep(c("Amphet","Coke","LSD"),each=3) )
-treesource <- function(clusterforest, solution, source){
+#' treesource(ClusterForest, 2)
+treesource <- function(clusterforest, solution){
   UseMethod("treesource",clusterforest)
 }
 
@@ -73,11 +64,10 @@ treesource <- function(clusterforest, solution, source){
 #' It visualizes the number of trees from each source that belong to each cluster.
 #' @param clusterforest The clusterforest object
 #' @param solution The solution
-#' @param source A vector with the source for each tree in the forest
 #' @export
 
 
-treesource.default <- function(clusterforest, solution,source)
+treesource.default <- function(clusterforest, solution)
 {
   print("Make sure that the clustering argument is an object from class clusterforest.")
 }
@@ -89,7 +79,6 @@ treesource.default <- function(clusterforest, solution,source)
 #' It visualizes the number of trees from each source that belong to each cluster.
 #' @param clusterforest The clusterforest object
 #' @param solution The solution
-#' @param source A vector with the source for each tree in the forest
 #' @export
 #' @importFrom plyr mapvalues
 #' @importFrom RColorBrewer brewer.pal
@@ -98,10 +87,10 @@ treesource.default <- function(clusterforest, solution,source)
 #' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradientn geom_bar ggtitle ylim
 #' @importFrom stats frequency
 #'
-treesource.clusterforest <- function(clusterforest, solution, source)
+treesource.clusterforest <- function(clusterforest, solution)
 {
   Clusters <- Sources <- freq <- cluster<- NULL
-
+  source <- clusterforest$treecov
   treesource<- as.numeric(mapvalues(source, from=c(unique(source)), to=seq(1,length(unique(source)))))
 
   clustering <- clusterforest$clusters[[solution]]

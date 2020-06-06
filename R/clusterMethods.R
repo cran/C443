@@ -38,20 +38,14 @@
 #'  return(tree)
 #'}
 #'
-#'#Use functions to draw 15 boostrapsamples and grow a tree on each sample
-#'Boots<- lapply(1:15, function(k) DrawBoots(Pima.tr ,k))
-#'Trees <- lapply(1:15, function (i) GrowTree(x=c("npreg", "glu",  "bp",
+#'#Use functions to draw 20 boostrapsamples and grow a tree on each sample
+#'Boots<- lapply(1:10, function(k) DrawBoots(Pima.tr ,k))
+#'Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",
 #'  "skin",  "bmi", "ped", "age"), y="type",
 #'Boots[[i]] ))
 #'
-#'#Turn the lists of dataframes and rpart trees to a forest object
-#'myforest<- forest(Pima.tr, Boots,Trees)
-#'
-#'#Calculate similarities between trees in forest, based on similarity measure m=1.
-#'Simmatrix1 <- treesimilarities(forest=myforest,  m=1)
-#'
-#'#cluster forest
-#'ClusterForest <- clusterforest(Simmatrix1, 1, 5)
+#'ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
+#' fromclus=1, toclus=5)
 #'plot(ClusterForest)
 #'plot(ClusterForest,2)
 plot.clusterforest <- function(x, ..., solution=NULL) {
@@ -115,4 +109,37 @@ summary.clusterforest<- function(object, ...){
   cat("Agreement predicted labels medoids vs forest per solution:\n " , unlist(object$agreement),  "\n")
 }
 
+#' Get the cluster assignments for a solution of a clusterforest object
+#'
+#' A function to get the cluster assignments for a given solution of a clusterforest object.
+#'
+#' @param x A clusterforest object
+#' @param solution The solution for which cluster assignments should be returned. Default = 1
+#' @param ... Additional arguments
+#' @export
+clusters.clusterforest<- function(x, ..., solution=1){
+  return(unlist(x$clusters[solution], recursive=FALSE))
+}
 
+#' Get the medoid trees for a solution of a clusterforest object
+#'
+#' A function to get the medoid trees for a given solution of a clusterforest object.
+#'
+#' @param x A clusterforest object
+#' @param solution The solution for which medoid trees should be returned. Default = 1
+#' @param ... Additional arguments
+#' @export
+medoidtrees.clusterforest<- function(x, ..., solution=1){
+  return(unlist(x$medoidtrees[solution], recursive=FALSE))
+}
+
+#' Get the similarity matrix that wast used to create a clusterforest object
+#'
+#' A function to get the similarity matrix used to obtain a clusterforest object.
+#'
+#' @param x A clusterforest object
+#' @param ... Additional arguments
+#' @export
+treesimilarities.clusterforest<- function(x, ...){
+  return(x$treesimilarities)
+}

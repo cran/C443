@@ -4,14 +4,12 @@
 \alias{treesource}
 \title{Mapping the tree clustering solution to a known source of variation underlying the forest}
 \usage{
-treesource(clusterforest, solution, source)
+treesource(clusterforest, solution)
 }
 \arguments{
 \item{clusterforest}{The clusterforest object}
 
 \item{solution}{The solution}
-
-\item{source}{A vector with the source for each tree in the forest}
 }
 \value{
 \item{multiplot}{For each value of the source, a bar plot with the number of trees that belong to each cluster}
@@ -50,28 +48,20 @@ GrowTree <- function(x,y,BootsSample, minsplit = 40, minbucket = 20, maxdepth =3
 }
 
 #Draw bootstrap samples and grow trees
-BootsA<- lapply(1:3, function(k) DrawBoots(data_Amphet,k))
-BootsC<- lapply(1:3, function(k) DrawBoots(data_cocaine,k))
-BootsL<- lapply(1:3, function(k) DrawBoots(data_LSD,k))
-Boots = c(BootsA,BootsC,BootsL)
+BootsA<- lapply(1:5, function(k) DrawBoots(data_Amphet,k))
+BootsC<- lapply(1:5, function(k) DrawBoots(data_cocaine,k))
+Boots = c(BootsA,BootsC)
 
-TreesA <- lapply(1:3, function (i) GrowTree(x=c ("Age", "Gender", "Edu", "Neuro",
+TreesA <- lapply(1:5, function (i) GrowTree(x=c ("Age", "Gender", "Edu", "Neuro",
 "Extr", "Open", "Agree","Consc", "Impul","Sensat"), y="Amphet", BootsA[[i]] ))
-TreesC <- lapply(1:3, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro",
+TreesC <- lapply(1:5, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro",
 "Extr", "Open", "Agree", "Consc", "Impul","Sensat"), y="Coke", BootsC[[i]] ))
-TreesL <- lapply(1:3, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro",
-"Extr", "Open", "Agree", "Consc", "Impul","Sensat"), y="LSD", BootsL[[i]] ))
-Trees=c(TreesA,TreesC,TreesL)
+Trees=c(TreesA,TreesC)
 
-#Create forest object
-myforest<- forest(drugs, Boots,Trees)
-
-#calculate similarities
-Simmatrix1<- treesimilarities(forest=myforest, m=1)
-
-#Cluster
-Clusters<- clusterforest(Simmatrix1, 1, 2)
+#Cluster the trees
+ClusterForest<- clusterforest(fulldata=drugs,treedata=Boots,trees=Trees,m=1,
+fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5))
 
 #Link cluster result to known source of variation
-treesource(Clusters, 2, rep(c("Amphet","Coke","LSD"),each=3) )
+treesource(ClusterForest, 2)
 }

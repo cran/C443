@@ -4,14 +4,12 @@
 \alias{treesource.default}
 \title{Mapping the tree clustering solution to a known source of variation underlying the forest}
 \usage{
-\method{treesource}{default}(clusterforest, solution, source)
+\method{treesource}{default}(clusterforest, solution)
 }
 \arguments{
 \item{clusterforest}{The clusterforest object}
 
 \item{solution}{The solution}
-
-\item{source}{A vector with the source for each tree in the forest}
 }
 \description{
 A function that can be used to get insight into a clusterforest solution, in the case that there is a known
