@@ -4,7 +4,7 @@
 \alias{plot.clusterforest}
 \title{Plot a clusterforest object}
 \usage{
-\method{plot}{clusterforest}(x, ..., solution = NULL)
+\method{plot}{clusterforest}(x, ..., solution = NULL, predictive_agreement = FALSE)
 }
 \arguments{
 \item{x}{A clusterforest object}
@@ -12,6 +12,9 @@
 \item{...}{Additional arguments}
 
 \item{solution}{The solution to plot the medoid trees from. Default = NULL}
+
+\item{predictive_agreement}{Indicating whether a plot should be returned of the agreement between the class label
+for each object predicted on the basis of the random forest as a whole versus based on the medoid trees. Default = FALSE.}
 }
 \description{
 A function that can be used to plot a clusterforest object, either by returning plots
@@ -53,7 +56,7 @@ Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",
 Boots[[i]] ))
 
 ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
-fromclus=1, toclus=5)
+fromclus=1, toclus=5, sameobs=FALSE)
 plot(ClusterForest)
 plot(ClusterForest,2)
 }

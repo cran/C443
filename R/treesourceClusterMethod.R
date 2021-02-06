@@ -2,11 +2,14 @@
 #'
 #' A function that can be used to get insight into a clusterforest solution, in the case that there is a known
 #' source of variation underlying the forest.
-#' It visualizes the number of trees from each source that belong to each cluster.
+#' In case of a categorical covariate, it visualizes the number of trees from each value of the covariate that belong to each cluster.
+#' In case of a continuous covariate, it returns the mean and standard deviation of the covariate in each cluster.
 #' @param clusterforest The clusterforest object
 #' @param solution The solution
-#' @return \item{multiplot}{For each value of the source, a bar plot with the number of trees that belong to each cluster}
-#' \item{heatmap}{A heatmap with for each value of the source, the number of trees that belong to each cluster}
+#' @return \item{multiplot}{In case of categorical covariate, for each value of the covariate, a bar plot with the number of trees that belong to each cluster}
+#' \item{heatmap}{In case of a categorical covariate, a heatmap with for each value of the covariate, the number of trees that belong to each cluster}
+#' \item{clustermeans}{In case of a continuous covariate, the mean of the covariate in each cluster}
+#' \item{clusterstds}{In case of a continuous covariate, the standard deviation of the covariate in each cluster}
 #' @export
 #' @importFrom plyr mapvalues
 #' @examples
@@ -14,8 +17,6 @@
 #' data_Amphet <-drugs[,c ("Amphet","Age", "Gender", "Edu", "Neuro", "Extr", "Open", "Agree",
 #' "Consc", "Impul","Sensat")]
 #' data_cocaine <-drugs[,c ("Coke","Age", "Gender", "Edu", "Neuro", "Extr", "Open", "Agree",
-#'                          "Consc", "Impul","Sensat")]
-#' data_LSD <- drugs[,c ("LSD","Age", "Gender", "Edu", "Neuro", "Extr", "Open", "Agree",
 #'                          "Consc", "Impul","Sensat")]
 #'
 #'
@@ -49,7 +50,7 @@
 #'
 #'#Cluster the trees
 #'ClusterForest<- clusterforest(fulldata=drugs,treedata=Boots,trees=Trees,m=1,
-#'fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5))
+#'fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5), sameobs=FALSE)
 #'
 #' #Link cluster result to known source of variation
 #' treesource(ClusterForest, 2)
@@ -85,10 +86,24 @@ treesource.default <- function(clusterforest, solution)
 #' @importFrom grDevices colorRampPalette
 #' @importFrom gridExtra grid.arrange
 #' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradientn geom_bar ggtitle ylim
-#' @importFrom stats frequency
+#' @importFrom stats frequency runif sd
 #'
 treesource.clusterforest <- function(clusterforest, solution)
 {
+  if(is.null(clusterforest$treecov)){
+    cat('The clusterforest object should contain a treecov attrbiute. Make sure you provide it as an argument when using the clusterforest() function')
+    return(NULL)
+  }
+
+  if(class(clusterforest$treecov)=="numeric"|class(clusterforest$treecov)=="integer"){
+    clustering <- clusterforest$clusters[[solution]]
+    clevels=sort(unique(clustering))
+    mean_c<- sapply(1:length(unique(clustering)), function (i) mean(clusterforest$treecov[clustering==clevels[i]]))
+    sd_c<- sapply(1:length(unique(clustering)), function (i) sd(clusterforest$treecov[clustering==clevels[i]])  )
+    return(list(clustermeans=mean_c , clusterstds=sd_c))
+  }
+
+  if(!class(clusterforest$treecov)=="numeric" & !class(clusterforest$treecov)=="integer"){
   Clusters <- Sources <- freq <- cluster<- NULL
   source <- clusterforest$treecov
   treesource<- as.numeric(mapvalues(source, from=c(unique(source)), to=seq(1,length(unique(source)))))
@@ -122,6 +137,9 @@ treesource.clusterforest <- function(clusterforest, solution)
   }
 
   multiplot <- do.call(grid.arrange, p)
-
   return(list(multiplot = multiplot, heatmap = heatmap))
+  }
+
 }
+
+

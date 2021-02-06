@@ -12,6 +12,8 @@
 #' of that solution are plotted.
 #' @param x A clusterforest object
 #' @param solution The solution to plot the medoid trees from. Default = NULL
+#' @param predictive_agreement Indicating whether a plot should be returned of the agreement between the class label
+#' for each object predicted on the basis of the random forest as a whole versus based on the medoid trees. Default = FALSE.
 #' @param ... Additional arguments
 #' @export
 #' @importFrom cluster pam
@@ -45,10 +47,10 @@
 #'Boots[[i]] ))
 #'
 #'ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
-#' fromclus=1, toclus=5)
+#' fromclus=1, toclus=5, sameobs=FALSE)
 #'plot(ClusterForest)
 #'plot(ClusterForest,2)
-plot.clusterforest <- function(x, ..., solution=NULL) {
+plot.clusterforest <- function(x, ..., solution=NULL, predictive_agreement=FALSE) {
   clusters=x$clusters
   medoids=x$medoids
   mds=x$medoidtrees
@@ -58,24 +60,26 @@ plot.clusterforest <- function(x, ..., solution=NULL) {
 
   if(is.null(solution)){
 
-#### Silhouete plot
-sil[unlist(lapply(sil , is.null))] <- NA
-sil<- unlist(sil)
-silplot <- plot(sil, main = "Silhouette plot", xlab = "Number of clusters", ylab = "Average Silhouette width", xlim=c(1,length(medoids)), xaxt="n")
-silplot <- silplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
+    # Within plot
+    sums[unlist(lapply(sums , is.null))] <- NA
+    M<- unlist(sums)
+    withinplot <- plot(M, main="Within-cluster similarity", xlab="Number of clusters", ylab="Within cluster similarity", xlim=c(1,length(medoids)), xaxt="n")
+    withinplot<-withinplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
 
-# Within plot
-sums[unlist(lapply(sums , is.null))] <- NA
-M<- unlist(sums)
-withinplot <- plot(M, main="Within-cluster similarity", xlab="Number of clusters", ylab="Within cluster similarity", xlim=c(1,length(medoids)), xaxt="n")
-withinplot<-withinplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
+    #### Silhouete plot
+    sil[unlist(lapply(sil , is.null))] <- NA
+    sil<- unlist(sil)
+    silplot <- plot(sil, main = "Silhouette plot", xlab = "Number of clusters", ylab = "Average Silhouette width", xlim=c(1,length(medoids)), xaxt="n")
+    silplot <- silplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
 
-## agreement
-agreement[unlist(lapply(agreement , is.null))] <- NA
-agreement<- unlist(agreement)
-agreementplot <- plot(agreement, main= "Agreement in predicted labels by medoids vs forest ", xlab = "Number of clusters", ylab = "Agreement", xlim = c(1,length(medoids)), xaxt = "n", ylim=c(0.3,1) )
-agreementplot<- agreementplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
 
+if(predictive_agreement==TRUE){
+  ## agreement
+  agreement[unlist(lapply(agreement , is.null))] <- NA
+  agreement<- unlist(agreement)
+  agreementplot <- plot(agreement, main= "Agreement in predicted labels by medoids vs forest ", xlab = "Number of clusters", ylab = "Agreement", xlim = c(1,length(medoids)), xaxt = "n", ylim=c(0.3,1) )
+  agreementplot<- agreementplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
+}
   } else{
     for(i in 1:solution){
     plot(x$medoidtrees[[solution]][[i]])
@@ -112,34 +116,97 @@ summary.clusterforest<- function(object, ...){
 #' Get the cluster assignments for a solution of a clusterforest object
 #'
 #' A function to get the cluster assignments for a given solution of a clusterforest object.
-#'
-#' @param x A clusterforest object
+#' @param clusterforest A clusterforest object
 #' @param solution The solution for which cluster assignments should be returned. Default = 1
-#' @param ... Additional arguments
 #' @export
-clusters.clusterforest<- function(x, ..., solution=1){
-  return(unlist(x$clusters[solution], recursive=FALSE))
+clusters <- function(clusterforest, solution){
+  UseMethod("clusters",clusterforest)
+}
+
+
+#' Get the cluster assignments for a solution of a clusterforest object
+#'
+#' A function to get the cluster assignments for a given solution of a clusterforest object.
+#' @param clusterforest The clusterforest object
+#' @param solution The solution
+#' @export
+clusters.default <- function(clusterforest, solution)
+{
+  print("Make sure that the clusterforest argument is an object from class clusterforest.")
+}
+
+#' Get the cluster assignments for a solution of a clusterforest object
+#'
+#' A function to get the cluster assignments for a given solution of a clusterforest object.
+#' @param clusterforest The clusterforest object
+#' @param solution The solution
+#' @export
+clusters.clusterforest<- function(clusterforest, solution=1){
+  return(unlist(clusterforest$clusters[solution], recursive=FALSE))
 }
 
 #' Get the medoid trees for a solution of a clusterforest object
 #'
 #' A function to get the medoid trees for a given solution of a clusterforest object.
-#'
-#' @param x A clusterforest object
+#' @param clusterforest A clusterforest object
 #' @param solution The solution for which medoid trees should be returned. Default = 1
-#' @param ... Additional arguments
 #' @export
-medoidtrees.clusterforest<- function(x, ..., solution=1){
-  return(unlist(x$medoidtrees[solution], recursive=FALSE))
+medoidtrees <- function(clusterforest, solution){
+  UseMethod("medoidtrees",clusterforest)
+}
+
+
+#' Get the medoid trees for a solution of a clusterforest object
+#'
+#' A function to get the medoid trees for a given solution of a clusterforest object.
+#'
+#' @param clusterforest A clusterforest object
+#' @param solution The solution for which medoid trees should be returned. Default = 1
+#' @export
+medoidtrees.default <- function(clusterforest, solution)
+{
+  print("Make sure that the clusterforest argument is an object from class clusterforest.")
+}
+
+
+#' Get the medoid trees for a solution of a clusterforest object
+#'
+#' A function to get the medoid trees for a given solution of a clusterforest object.
+#'
+#' @param clusterforest A clusterforest object
+#' @param solution The solution for which medoid trees should be returned. Default = 1
+#' @export
+medoidtrees.clusterforest<- function(clusterforest, solution=1){
+  return(unlist(clusterforest$medoidtrees[solution], recursive=FALSE))
 }
 
 #' Get the similarity matrix that wast used to create a clusterforest object
 #'
 #' A function to get the similarity matrix used to obtain a clusterforest object.
 #'
-#' @param x A clusterforest object
-#' @param ... Additional arguments
+#' @param clusterforest A clusterforest object
 #' @export
-treesimilarities.clusterforest<- function(x, ...){
-  return(x$treesimilarities)
+treesimilarities <- function(clusterforest){
+  UseMethod("medoidtrees",clusterforest)
+}
+
+#' Get the similarity matrix that wast used to create a clusterforest object
+#'
+#' A function to get the similarity matrix used to obtain a clusterforest object.
+#'
+#' @param clusterforest A clusterforest object
+#' @export
+treesimilarities.default <- function(clusterforest)
+{
+  print("Make sure that the clusterforest argument is an object from class clusterforest.")
+}
+
+#' Get the similarity matrix that wast used to create a clusterforest object
+#'
+#' A function to get the similarity matrix used to obtain a clusterforest object.
+#'
+#' @param clusterforest A clusterforest object
+#' @export
+treesimilarities.clusterforest<- function(clusterforest){
+  return(clusterforest$treesimilarities)
 }

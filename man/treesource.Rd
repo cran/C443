@@ -12,21 +12,22 @@ treesource(clusterforest, solution)
 \item{solution}{The solution}
 }
 \value{
-\item{multiplot}{For each value of the source, a bar plot with the number of trees that belong to each cluster}
-\item{heatmap}{A heatmap with for each value of the source, the number of trees that belong to each cluster}
+\item{multiplot}{In case of categorical covariate, for each value of the covariate, a bar plot with the number of trees that belong to each cluster}
+\item{heatmap}{In case of a categorical covariate, a heatmap with for each value of the covariate, the number of trees that belong to each cluster}
+\item{clustermeans}{In case of a continuous covariate, the mean of the covariate in each cluster}
+\item{clusterstds}{In case of a continuous covariate, the standard deviation of the covariate in each cluster}
 }
 \description{
 A function that can be used to get insight into a clusterforest solution, in the case that there is a known
 source of variation underlying the forest.
-It visualizes the number of trees from each source that belong to each cluster.
+In case of a categorical covariate, it visualizes the number of trees from each value of the covariate that belong to each cluster.
+In case of a continuous covariate, it returns the mean and standard deviation of the covariate in each cluster.
 }
 \examples{
 require(rpart)
 data_Amphet <-drugs[,c ("Amphet","Age", "Gender", "Edu", "Neuro", "Extr", "Open", "Agree",
 "Consc", "Impul","Sensat")]
 data_cocaine <-drugs[,c ("Coke","Age", "Gender", "Edu", "Neuro", "Extr", "Open", "Agree",
-                         "Consc", "Impul","Sensat")]
-data_LSD <- drugs[,c ("LSD","Age", "Gender", "Edu", "Neuro", "Extr", "Open", "Agree",
                          "Consc", "Impul","Sensat")]
 
 
@@ -60,7 +61,7 @@ Trees=c(TreesA,TreesC)
 
 #Cluster the trees
 ClusterForest<- clusterforest(fulldata=drugs,treedata=Boots,trees=Trees,m=1,
-fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5))
+fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5), sameobs=FALSE)
 
 #Link cluster result to known source of variation
 treesource(ClusterForest, 2)

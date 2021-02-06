@@ -14,7 +14,9 @@ clusterforest(
   weight = NULL,
   fromclus = 1,
   toclus = 1,
-  treecov = NULL
+  treecov = NULL,
+  sameobs = FALSE,
+  seed = NULL
 )
 }
 \arguments{
@@ -27,13 +29,14 @@ clusterforest(
 \item{simmatrix}{A similaritymatrix with the similarities between all trees. Should be square, symmetric and have ones on the diagonal. Default=NULL}
 
 \item{m}{Similarity measure that should be used to calculate similarities, in the case that no similarity matrix was provided by the user. Default=NULL.
-m=1 is based on counting equal predictors or predictor-split point combinations (Equation 3 or 6  in the Supplmentary Materials of Sies & Van Mechelen (2020));
-m=2 is the measure of Shannon & Banks (1999), based on counting the number of equal paths from rootnode to leafs (See also Sies & Van Mechelen (2020), Equation 2);
-m=3 is based on the agreement in predicted classification labels (Chipman, 1998, see also Sies & Van Mechelen (2020), Equation 7);
-m=4 is based on the agreement of partitions (Chipman, 1998; see also Sies & Van Mechelen (2020), Equation 5);
-m=5 is based on counting equal elementary conjunctions of trees transformed to disjunctive normal form ((limited to binary predictors), see Sies & Van Mechelen (2020), Supplementary materials Equation 15);
-m=6 is based on comparing sets of predictors or predictor split point combinations (taking into account directions of the splits) associated with a leaf, while also taking into account the classification label of that leaf
-(see Sies & Van Mechelen (2020), Supplementary Materials Equation 13 and 14).}
+m=1 is based on counting common predictors;
+m=2 is based on counting common predictor-split point combinations;
+m=3 is based on common ordered sets of predictor-range part combinations (see Shannon & Banks (1999));
+m=4 is based on the agreement of partitions implied by leaf membership (Chipman, 1998);
+m=5 is based on the agreement of partitions implied by class labels (Chipman, 1998);
+m=6 is based on the number of predictor occurrences in definitions of leaves with same class label;
+m=7 is based on the number of predictor-split point combinations in definitions of leaves with same class label
+m=8  measures closeness to logical equivalence (applicable in case of binary predictors only)}
 
 \item{tol}{A vector with for each predictor a number that defines the tolerance zone within which two split points of the predictor in question are assumed equal. For example, if the tolerance for predictor X
 is 1, then a split on that predictor in tree A will be assumed equal to a split in tree B as long as the splitpoint in tree B is within the splitpoint in tree A + or - 1. Only applicable for m=1 and m=6. Default=NULL}
@@ -45,6 +48,10 @@ is 1, then a split on that predictor in tree A will be assumed equal to a split 
 \item{toclus}{The highest number of clusters for which the PAM algorithm should be run. Default=1.}
 
 \item{treecov}{A vector with the covariate value for each tree in the forest.}
+
+\item{sameobs}{Are the same observations included in every tree data set?}
+
+\item{seed}{A seed number that should be used for the multi start procedure (based on which initial medoids are assigned). Default=NULL.}
 }
 \value{
 The function returns an object of class clusterforest, with attributes:
@@ -57,15 +64,16 @@ medoids only (see Sies & Van Mechelen,2020)}
 \item{withinsim}{Within cluster similarity for each solution (see Sies & Van Mechelen, 2020)}
 \item{treesimilarities}{Similarity matrix on which clustering was based}
 \item{treecov}{covariate value for each tree in the forest}
+\item{seed}{seed number that was used for the multi start procedure (based on which initial medoids were assigned)}
 }
 \description{
 A function to get insight into a forest of classification trees by clustering the trees in a forest using Partitioning Around Medoids (PAM, Kaufman & Rousseeuw, 2009), based on user provided similarities,
-or based on similarities calculated by the package based on a similarity measure chosen by the user (see Sies & Van Mechelen, 2020).
+or based on similarities calculated by the package using a similarity measure chosen by the user (see Sies & Van Mechelen, 2020).
 }
 \details{
-The user should provide the number of clusters that the solution should contain, or a range of numbers.
-In the latter case, the resulting clusterforest object will contain results for each solution.
-On top of this clusterforest object, several methods, such as plot, print and summary, can be used.
+The user should provide the number of clusters that the solution should contain, or a range of numbers that should be explored.
+In the latter case, the resulting clusterforest object will contain clustering results for each solution.
+On this clusterforest object, several methods, such as plot, print and summary, can be used.
 }
 \examples{
 require(MASS)
@@ -91,9 +99,9 @@ Boots<- lapply(1:10, function(k) DrawBoots(Pima.tr ,k))
 Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",  "skin",
 "bmi", "ped", "age"), y="type", Boots[[i]] ))
 
-#Turn the lists of dataframes and rpart trees to a forest object
+#Clustering the trees in this forest
 ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
-fromclus=1, toclus=5)
+fromclus=1, toclus=5, sameobs=FALSE)
 }
 \references{
 \cite{Kaufman, L., & Rousseeuw, P. J. (2009). Finding groups in data: an introduction to cluster analysis (Vol. 344). John Wiley & Sons.}
