@@ -18,8 +18,8 @@ treesource(clusterforest, solution)
 \item{clusterstds}{In case of a continuous covariate, the standard deviation of the covariate in each cluster}
 }
 \description{
-A function that can be used to get insight into a clusterforest solution, in the case that there is a known
-source of variation underlying the forest.
+A function that can be used to get insight into a clusterforest solution, in the case that there are known
+sources of variation underlying the forest.
 In case of a categorical covariate, it visualizes the number of trees from each value of the covariate that belong to each cluster.
 In case of a continuous covariate, it returns the mean and standard deviation of the covariate in each cluster.
 }
@@ -60,7 +60,7 @@ TreesC <- lapply(1:5, function (i) GrowTree(x=c ( "Age", "Gender", "Edu", "Neuro
 Trees=c(TreesA,TreesC)
 
 #Cluster the trees
-ClusterForest<- clusterforest(fulldata=drugs,treedata=Boots,trees=Trees,m=1,
+ClusterForest<- clusterforest(observeddata=drugs,treedata=Boots,trees=Trees,m=1,
 fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5), sameobs=FALSE)
 
 #Link cluster result to known source of variation

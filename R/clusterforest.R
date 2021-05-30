@@ -7,7 +7,7 @@
 #' In the latter case, the resulting clusterforest object will contain clustering results for each solution.
 #' On this clusterforest object, several methods, such as plot, print and summary, can be used.
 #'
-#' @param fulldata The full/original dataset
+#' @param observeddata The entire observed dataset
 #' @param treedata A list of dataframes on which the trees are based
 #' @param trees A list of trees of class party, classes inheriting from party (e.g., glmtree), or classes that can be coerced to party (i.e., rpart, Weka_tree, XMLnode).
 #' @param simmatrix A similaritymatrix with the similarities between all trees. Should be square, symmetric and have ones on the diagonal. Default=NULL
@@ -25,8 +25,8 @@
 #' @param weight If 1, the number of dissimilar paths in the Shannon and Banks measure (m=2), should be weighted by 1/their length (Otherwise they are weighted equally). Only applicable for m=2. Default=NULL
 #' @param fromclus The lowest number of clusters for which the PAM algorithm should be run. Default=1.
 #' @param toclus The highest number of clusters for which the PAM algorithm should be run. Default=1.
-#' @param treecov A vector with the covariate value for each tree in the forest.
-#' @param sameobs Are the same observations included in every tree data set?
+#' @param treecov A vector/dataframe with the covariate value(s) for each tree in the forest (1 column per covariate).
+#' @param sameobs Are the same observations included in every tree data set? For example, in the case of subsamples or bootstrap samples, the answer is no. Default=FALSE
 #' @param seed A seed number that should be used for the multi start procedure (based on which initial medoids are assigned). Default=NULL.
 #' @return The function returns an object of class clusterforest, with attributes:
 #' \item{medoids}{the position of the medoid trees in the forest (i.e., which element of the list of partytrees)}
@@ -37,7 +37,7 @@
 #' medoids only (see Sies & Van Mechelen,2020)}
 #' \item{withinsim}{Within cluster similarity for each solution (see Sies & Van Mechelen, 2020)}
 #' \item{treesimilarities}{Similarity matrix on which clustering was based}
-#' \item{treecov}{covariate value for each tree in the forest}
+#' \item{treecov}{covariate value(s) for each tree in the forest}
 #' \item{seed}{seed number that was used for the multi start procedure (based on which initial medoids were assigned)}
 #' @export
 #' @importFrom cluster pam
@@ -79,11 +79,11 @@
 #' "bmi", "ped", "age"), y="type", Boots[[i]] ))
 #'
 #'#Clustering the trees in this forest
-#'ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
+#'ClusterForest<- clusterforest(observeddata=Pima.tr,treedata=Boots,trees=Trees,m=1,
 #'fromclus=1, toclus=5, sameobs=FALSE)
 
 
-clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, tol=NULL, weight=NULL,fromclus=1, toclus=1, treecov=NULL, sameobs=FALSE, seed=NULL){
+clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL, tol=NULL, weight=NULL,fromclus=1, toclus=1, treecov=NULL, sameobs=FALSE, seed=NULL){
   ############################## Check forest input #####################
   ###  Some checks whether correct forest information is provided by user
   if(typeof(trees) != "list" ) {
@@ -110,7 +110,7 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
   }
 
   ## Turn user provided forest information into object of class forest.
-  forest <- list(partytrees = trees, treedata = treedata, fulldata=fulldata)
+  forest <- list(partytrees = trees, treedata = treedata, observeddata=observeddata)
 
   class(forest) <- append(class(forest), "forest")
 
@@ -159,7 +159,7 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
     Y= unlist(lapply(1:length(forest$partytrees), function(k) colnames(forest$treedata[[k]])[!colnames(forest$treedata[[k]]) %in% X]))
 
     if (m == 1){
-      sim <- M1(forest$fulldata, forest$treedata, Y, X, forest$partytrees, tol=NULL)
+      sim <- M1(forest$observeddata, forest$treedata, Y, X, forest$partytrees, tol=NULL)
     }
 
     if(m == 2){
@@ -167,44 +167,44 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
         cat("Please provide a tolerance zone for each predictor")
         return(NULL)
       } else{
-      sim <- M1(forest$fulldata, forest$treedata, Y, X, forest$partytrees, tol)
+      sim <- M1(forest$observeddata, forest$treedata, Y, X, forest$partytrees, tol)
       }
     }
 
     if (m == 3){
-      Xclass<- sapply(1:length(X), function(i) class(forest$fulldata[,X[i]] ) == "integer"|class(forest$fulldata[,X[i]] ) == "numeric")
+      Xclass<- sapply(1:length(X), function(i) class(forest$observeddata[,X[i]] ) == "integer"|class(forest$observeddata[,X[i]] ) == "numeric")
 
       if("FALSE" %in% Xclass){
         cat("This measure only works on numerical splitvariables (class integer or numeric)")
         return(NULL)
       } else{
-        sim <- M2(forest$fulldata, forest$treedata, Y, forest$partytrees, weight)
+        sim <- M2(forest$observeddata, forest$treedata, Y, forest$partytrees, weight)
       }
     }
 
     if (m == 4){
-      sim <- M4(forest$fulldata, forest$treedata, Y, forest$partytrees, sameobs)
+      sim <- M4(forest$observeddata, forest$treedata, Y, forest$partytrees,sameobs)
     }
 
     if (m == 5){
-      sim <- M3(forest$fulldata, forest$treedata, Y,forest$partytrees, sameobs)
+      sim <- M3(forest$observeddata, forest$treedata, Y,forest$partytrees, sameobs)
     }
 
 
 
     if (m == 6){
-      Xclass<- sapply(1:length(X), function(i) class(forest$fulldata[,X[i]] ) == "integer"|class(forest$fulldata[,X[i]] ) == "numeric")
+      Xclass<- sapply(1:length(X), function(i) class(forest$observeddata[,X[i]] ) == "integer"|class(forest$observeddata[,X[i]] ) == "numeric")
 
       if("FALSE" %in% Xclass){
         cat("This measure only works on numerical splitvariables (class integer or numeric)")
         return(NULL)
       }
 
-      sim <- M6(forest$fulldata, forest$treedata, Y, X, forest$partytrees, tol=NULL)
+      sim <- M6(forest$observeddata, forest$treedata, Y, X, forest$partytrees, tol=NULL)
     }
 
     if(m==7){
-      Xclass<- sapply(1:length(X), function(i) class(forest$fulldata[,X[i]] ) == "integer"|class(forest$fulldata[,X[i]] ) == "numeric")
+      Xclass<- sapply(1:length(X), function(i) class(forest$observeddata[,X[i]] ) == "integer"|class(forest$observeddata[,X[i]] ) == "numeric")
 
       if("FALSE" %in% Xclass){
         cat("This measure only works on numerical splitvariables (class integer or numeric)")
@@ -215,17 +215,21 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
         cat("Please provide a tolerance zone for each predictor")
         return(NULL)
       } else{
-            sim <- M6(forest$fulldata, forest$treedata, Y, X, forest$partytrees, tol)
+            sim <- M6(forest$observeddata, forest$treedata, Y, X, forest$partytrees, tol)
       }
     }
 
     if (m == 8){
+
+
       Xclass<- sapply(1:length(X), function(i) class(forest$fulldata[,X[i]] ) == "factor")
 
       if("FALSE" %in% Xclass){
         cat("This measure only works on binary splitvariables (class factor)")
         return(NULL)
+
       }else{
+
         Xbin<- sapply(1:length(X), function(i) levels(forest$fulldata[,X[i]]) > 2 )
         if("FALSE" %in% Xbin){
           cat("This measure only works on binary splitvariables (class factor)")
@@ -233,9 +237,7 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
         } else{
           sim <- M5(forest$fulldata, forest$treedata, Y, X, forest$partytrees, sameobs)
         }
-
       }
-
     }
 
     # Turn similarity matrix into treesimilarities object
@@ -249,7 +251,7 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
   ############################## Clustering ################################
   trees=forest$partytrees
   treedata=forest$treedata
-  fulldata=forest$fulldata
+  observeddata=forest$observeddata
 
   medoids<- list(0)
   clusters<- list(0)
@@ -264,7 +266,7 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
   for (i in fromclus:toclus){
 
     # first do the clustering with BUILD and SWAP phase
-    clustering <- pam(x = 1 - treesimilarities, k = i, diss = TRUE)
+    clustering <- pam(x = 1 - treesimilarities, k = i, diss = TRUE, pamonce=3)
 
     if(is.null(seed)){
       seed<- round(runif(1,0,100000))
@@ -273,7 +275,7 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
     for (j in 1:1000){
       set.seed(seed+j)
       initmedoids= sample(1:nrow(treesimilarities),i)
-      medsseeds[[j]] <- pam(1-treesimilarities,k=i,medoids=initmedoids, diss=TRUE)
+      medsseeds[[j]] <- pam(1-treesimilarities,k=i,medoids=initmedoids, diss=TRUE, pamonce=3)
       obj[j]<-medsseeds[[j]]$objective[2]
     }
 
@@ -295,13 +297,13 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
     mds[[i]]<- meds
     sil[[i]] <-  clustering $ silinfo $ avg.width
 
-    pamtrees <- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+    pamtrees <- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
     g<- lapply(1:length(trees), function(k) pamtrees[[k]]$predresp)
-    forestpred <- sapply(1:nrow(fulldata), function (k) levels(g[[1]])[which.max( c(sum(unlist(lapply(g, `[[`, k)) ==  levels(unlist(lapply(g, `[[`, k)))[1], na.rm=TRUE),  sum(unlist(lapply(g, `[[`, k)) ==  levels(unlist(lapply(g, `[[`, k)))[2], na.rm=TRUE) )   )] )
+    forestpred <- sapply(1:nrow(observeddata), function (k) levels(g[[1]])[which.max( c(sum(unlist(lapply(g, `[[`, k)) ==  levels(unlist(lapply(g, `[[`, k)))[1], na.rm=TRUE),  sum(unlist(lapply(g, `[[`, k)) ==  levels(unlist(lapply(g, `[[`, k)))[2], na.rm=TRUE) )   )] )
 
     gmed <- g[c(medoids[[i]])]
     w <- table(clusters[[i]])
-    medpred <- sapply(1:nrow(fulldata), function (k) levels(gmed[[1]])[which.max( c(sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[1], na.rm=TRUE),  sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[2], na.rm=TRUE) )   )] )
+    medpred <- sapply(1:nrow(observeddata), function (k) levels(gmed[[1]])[which.max( c(sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[1], na.rm=TRUE),  sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[2], na.rm=TRUE) )   )] )
 
     agreement[[i]] <- mean(forestpred == medpred)
 
@@ -324,11 +326,11 @@ clusterforest <- function (fulldata, treedata, trees, simmatrix=NULL, m=NULL, to
 ################# subfunctions #############################
 #Measure 1: number of splitvariables & splitpoints in common/total number of splitvariables largest tree
 #If tol = null, only splitvariables taken into account
-M1 <- function (fulldata, treedata, Y, X, trees, tol){
+M1 <- function (observeddata, treedata, Y, X, trees, tol){
 
   #check whether there are any categorical predictors
   #if so, this measure with splitvariables can not be used.
-  Xclass<- sapply(1:length(X), function(i) class(fulldata[,X[i]] ) == "integer"|class(fulldata[,X[i]] ) == "numeric")
+  Xclass<- sapply(1:length(X), function(i) class(observeddata[,X[i]] ) == "integer"|class(observeddata[,X[i]] ) == "numeric")
 
   if(!is.null(tol)){
     if("FALSE" %in% Xclass){
@@ -337,7 +339,7 @@ M1 <- function (fulldata, treedata, Y, X, trees, tol){
     }
   }
 
-  pamtrees <- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+  pamtrees <- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
 
   simmatrix <- matrix(c(0), length(trees), length(trees))
   splits <- lapply(1:length(trees), function(i) splitv(pamtrees[[i]], tol))
@@ -356,10 +358,10 @@ M1 <- function (fulldata, treedata, Y, X, trees, tol){
 }
 
 ### Measure 2: Paths
-M2<- function(fulldata, treedata, Y, trees, weight){
+M2<- function(observeddata, treedata, Y, trees, weight){
   if (is.null(weight)){weight=0}
 
-  pamtrees <- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+  pamtrees <- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
 
   n <- length(pamtrees)
   simmatrix <- matrix(c(0), n, n)
@@ -379,8 +381,8 @@ M2<- function(fulldata, treedata, Y, trees, weight){
 
 
 ####### Measure 3: classification labels agreement
-M3<- function (fulldata, treedata, Y, trees, sameobs){
-  pamtrees<- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+M3<- function (observeddata, treedata, Y, trees, sameobs){
+  pamtrees<- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
   n <- length(pamtrees)
   sim <- matrix(0, length(pamtrees), length(pamtrees))
 
@@ -392,7 +394,7 @@ M3<- function (fulldata, treedata, Y, trees, sameobs){
     s <- sapply(1:n, function (s) sapply(s:n, function (j) mean(pamtrees[[s]]$predresp==pamtrees[[j]]$predresp)))
   }
 
-  for (i in 1:n){
+   for (i in 1:n){
     sim[i,c(i:n)] <- s[[i]]
   }
 
@@ -402,8 +404,8 @@ M3<- function (fulldata, treedata, Y, trees, sameobs){
 }
 
 ###### Measure 4: Partition metric ################
-M4<- function (fulldata, treedata, Y, trees, sameobs){
-  pamtrees <- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+M4<- function (observeddata, treedata, Y, trees, sameobs){
+  pamtrees <- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
 
   n <- length(trees)
   if(sameobs==TRUE){
@@ -412,6 +414,7 @@ M4<- function (fulldata, treedata, Y, trees, sameobs){
     par<- lapply(1:n, function (s) part(treedata[[s]], pamtrees[[s]]$prednode))
   }
 
+  par<- lapply(1:n, function (s) part(treedata[[s]], pamtrees[[s]]$prednode))
   no_cores <- detectCores() - 1
   cl <- makeCluster(no_cores)
   clusterExport(cl, c("metr", "par", "treedata", "n"), envir=environment())
@@ -430,9 +433,9 @@ M4<- function (fulldata, treedata, Y, trees, sameobs){
 
 
 ### set of splitvariables and splitpoints and the prediction of a leaf
-M6 <- function (fulldata, treedata, Y, X, trees, tol){
+M6 <- function (observeddata, treedata, Y, X, trees, tol){
 
-  pamtrees <- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+  pamtrees <- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
 
   n <- length(pamtrees)
   simmatrix <- matrix(c(0), n, n)
@@ -464,21 +467,24 @@ M6 <- function (fulldata, treedata, Y, X, trees, tol){
 }
 
 
-M5 <- function(fulldata, treedata, Y, X, trees, sameobs){
-  pamtrees <- lapply(1:length(trees), function (i) pamtree(fulldata,treedata[[i]], Y[i],trees[[i]]))
+M5 <- function(observeddata, treedata, Y, X, trees, sameobs){
+  pamtrees <- lapply(1:length(trees), function (i) pamtree(observeddata,treedata[[i]], Y[i],trees[[i]]))
   n <-length(pamtrees)
   s <- matrix(0, length(pamtrees), length(pamtrees))
-  di <- lapply(1:length(pamtrees), function (i) disjnorm(pamtrees[[i]], trees[[i]],fulldata, treedata[[i]] ,X, Y[i], sameobs))
+  di <- lapply(1:length(pamtrees), function (i) disjnorm(pamtrees[[i]], trees[[i]],observeddata, treedata[[i]] ,X, Y[i], sameobs))
 
   no_cores <- detectCores() - 1
   cl <- makeCluster(no_cores)
   clusterExport(cl, c("dis", "di", "n", "pamtrees" ), envir=environment())
+
   if(sameobs==TRUE){
     si <- parSapply(cl, 1:n, function (i) sapply (i:n, function (j) dis(di[[i]], di[[j]], pamtrees[[i]]$predresptrain, pamtrees[[j]]$predresptrain)))
   }
   else{
     si <- parSapply(cl, 1:n, function (i) sapply (i:n, function (j) dis(di[[i]], di[[j]], pamtrees[[i]]$predresp, pamtrees[[j]]$predresp)))
   }
+
+  si <- parSapply(cl, 1:n, function (i) sapply (i:n, function (j) dis(di[[i]], di[[j]], pamtrees[[i]]$predresp, pamtrees[[j]]$predresp)))
   stopCluster(cl)
 
   for (i in 1:n){
@@ -497,40 +503,40 @@ M5 <- function(fulldata, treedata, Y, X, trees, sameobs){
 
 
 ## Function to turn each tree into a pam tree, containing the set of rules, the predictions on the full dataset and the nodes
-## fulldata is the full dataset, treedata is the dataset for the current tree, Y is a vector with the outcome for each tree and tree are the partytrees
+## observeddata is the full dataset, treedata is the dataset for the current tree, Y is a vector with the outcome for each tree and tree are the partytrees
 
-pamtree<- function(fulldata,treedata,Y,tree){
+pamtree<- function(observeddata,treedata,Y,tree){
   if(length(tree) > 2){   ## Check whether there was a split
     paths <- listrulesparty(x=tree)   # lists all the paths from root to leave
-    prednode <- predict(tree, newdata = fulldata, type = "node")  #predicts node for every row of full data
+    prednode <- predict(tree, newdata = observeddata, type = "node")  #predicts node for every row of full data
     if(class(treedata[,Y]) != "factor" ) {treedata[,Y] <- as.factor(treedata[,Y])}  #check whether y is a factor, if not-- make it a factor
-    if(class(fulldata[,Y]) != "factor" ) {fulldata[,Y] <- as.factor(fulldata[,Y])}  #check whether y is a factor, if not-- make it a factor
+    if(class(observeddata[,Y]) != "factor" ) {observeddata[,Y] <- as.factor(observeddata[,Y])}  #check whether y is a factor, if not-- make it a factor
 
     if(class(tree)[1]== "glmtree"){
-      predresp <- predict(tree, newdata = fulldata, type="response")  #predicts response for every row of full data
-      predresp[predresp<0.5] <- levels(fulldata[,Y])[1]
-      predresp[predresp!=levels(fulldata[,Y])[1]] <- levels(fulldata[,Y])[2]
-      predresp <- factor(predresp, levels=c(levels(fulldata[,Y])[1], levels(fulldata[,Y])[2]))
+      predresp <- predict(tree, newdata = observeddata, type="response")  #predicts response for every row of full data
+      predresp[predresp<0.5] <- levels(observeddata[,Y])[1]
+      predresp[predresp!=levels(observeddata[,Y])[1]] <- levels(observeddata[,Y])[2]
+      predresp <- factor(predresp, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
     }else{
-      predresp <- predict(tree, newdata = fulldata, type="prob")  #predicts response for every row of full data
+      predresp <- predict(tree, newdata = observeddata, type="prob")  #predicts response for every row of full data
       predresp <- predresp[,1]
-      predresp[predresp<0.5]<- levels(fulldata[,Y])[1]
-      predresp[predresp!= levels(fulldata[,Y])[1]]<- levels(fulldata[,Y])[2]
-      predresp <- factor(predresp, levels=c(levels(fulldata[,Y])[1], levels(fulldata[,Y])[2]))
+      predresp[predresp<0.5]<- levels(observeddata[,Y])[1]
+      predresp[predresp!= levels(observeddata[,Y])[1]]<- levels(observeddata[,Y])[2]
+      predresp <- factor(predresp, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
     }
 
 
     if(class(tree)[1]== "glmtree"){
-      predresptrain <- predict(tree, newdata = treedata, type="response")  #predicts response for every row of tree data
-      predresptrain[predresptrain<0.5] <- levels(fulldata[,Y])[1]
-      predresptrain[predresptrain!=levels(fulldata[,Y])[1]] <- levels(fulldata[,Y])[2]
-      predresptrain <- factor(predresptrain, levels=c(levels(fulldata[,Y])[1], levels(fulldata[,Y])[2]))
+      predresptrain <- predict(tree, newdata = treedata, type="response")  #predicts response for every row of full data
+      predresptrain[predresptrain<0.5] <- levels(observeddata[,Y])[1]
+      predresptrain[predresptrain!=levels(observeddata[,Y])[1]] <- levels(observeddata[,Y])[2]
+      predresptrain <- factor(predresptrain, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
     }else{
-      predresptrain <- predict(tree, newdata = treedata, type="prob")  #predicts response for every row of tree data
+      predresptrain <- predict(tree, newdata = treedata, type="prob")  #predicts response for every row of full data
       predresptrain <- predresptrain[,1]
-      predresptrain[predresptrain<0.5]<- levels(fulldata[,Y])[1]
-      predresptrain[predresptrain!= levels(fulldata[,Y])[1]]<- levels(fulldata[,Y])[2]
-      predresptrain <- factor(predresptrain, levels=c(levels(fulldata[,Y])[1], levels(fulldata[,Y])[2]))
+      predresptrain[predresptrain<0.5]<- levels(observeddata[,Y])[1]
+      predresptrain[predresptrain!= levels(observeddata[,Y])[1]]<- levels(observeddata[,Y])[2]
+      predresptrain <- factor(predresptrain, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
     }
 
     prednodetrain <- predict(tree, newdata = treedata, type = "node")  #predicts node for every row of tree data
@@ -541,8 +547,8 @@ pamtree<- function(fulldata,treedata,Y,tree){
 
 
     #the paths that lead to a response of the second level of y
-    path1 <- paths[frame[, 2] == levels(fulldata[,Y])[2]]
-    path0 <- paths[frame[, 2] == levels(fulldata[,Y])[1]]
+    path1 <- paths[frame[, 2] == levels(observeddata[,Y])[2]]
+    path0 <- paths[frame[, 2] == levels(observeddata[,Y])[1]]
 
     paths <- sapply(1:length(paths), function (k) strsplit(paths[k], " & "))  #split rules with multiple conditions in substrings
     path1 <- sapply(1:length(path1), function (k) strsplit(path1[k], " & "))
@@ -570,7 +576,7 @@ pamtree<- function(fulldata,treedata,Y,tree){
   }
 
 
-  value <- list(pamtree = paths, path0=path0, path1= path1, prednode = prednode, predresp=predresp, prednodetrain=prednodetrain, predresptrain=predresptrain)
+  value <- list(pamtree = paths, path0=path0, path1= path1, prednode = prednode, predresp=predresp,prednodetrain=prednodetrain, predresptrain=predresptrain)
   attr(value, "class") <- "pamtree"
   return(value)
 }
@@ -976,7 +982,7 @@ dis <- function (tree1,tree2, predresp1, predresp2){
 
 
 
-disjnorm <- function (pamtree, tree,fulldata, treedata,X, Y, sameobs){
+disjnorm <- function (pamtree, tree,observeddata, treedata,X, Y, sameobs){
   path <- pamtree$path1    #Paths that lead to leaf with predicted class 1
 
   if(sameobs==TRUE){
@@ -986,14 +992,13 @@ disjnorm <- function (pamtree, tree,fulldata, treedata,X, Y, sameobs){
   }
 
 
-
   if(length(path) > 0){
     leaves <- length(path)  # number of leaves
     l <- sapply(1:leaves, function (k) length(path[[k]]))     # for each path number of elements
     levels <- matrix(c(0), length(X), 2)
 
     for (i in 1:length(X)){
-      levels[i, ] <- levels(fulldata[, X[i]])
+      levels[i, ] <- levels(observeddata[, X[i]])
     }
 
     levels <- cbind(X, levels)
@@ -1058,7 +1063,7 @@ disjnorm <- function (pamtree, tree,fulldata, treedata,X, Y, sameobs){
     paths <- paths[lengths(paths) == max(l)]
 
   }else{   ### if tree only root
-    if(predresp[1] == levels(fulldata[,Y])[1]){
+    if(predresp[1] == levels(observeddata[,Y])[1]){
       paths <- NULL
     }else{
       a <- matrix(c(0), 2, length(X))

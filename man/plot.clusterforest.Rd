@@ -55,7 +55,7 @@ Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",
  "skin",  "bmi", "ped", "age"), y="type",
 Boots[[i]] ))
 
-ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
+ClusterForest<- clusterforest(observeddata=Pima.tr,treedata=Boots,trees=Trees,m=1,
 fromclus=1, toclus=5, sameobs=FALSE)
 plot(ClusterForest)
 plot(ClusterForest,2)

@@ -46,7 +46,7 @@
 #'  "skin",  "bmi", "ped", "age"), y="type",
 #'Boots[[i]] ))
 #'
-#'ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
+#'ClusterForest<- clusterforest(observeddata=Pima.tr,treedata=Boots,trees=Trees,m=1,
 #' fromclus=1, toclus=5, sameobs=FALSE)
 #'plot(ClusterForest)
 #'plot(ClusterForest,2)
@@ -63,7 +63,7 @@ plot.clusterforest <- function(x, ..., solution=NULL, predictive_agreement=FALSE
     # Within plot
     sums[unlist(lapply(sums , is.null))] <- NA
     M<- unlist(sums)
-    withinplot <- plot(M, main="Within-cluster similarity", xlab="Number of clusters", ylab="Within cluster similarity", xlim=c(1,length(medoids)), xaxt="n")
+    withinplot <- plot(M, main="Within-cluster similarity plot", xlab="Number of clusters", ylab="Within-cluster similarity", xlim=c(1,length(medoids)), xaxt="n")
     withinplot<-withinplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
 
     #### Silhouete plot

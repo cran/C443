@@ -5,7 +5,7 @@
 \title{Clustering the classification trees in a forest based on similarities}
 \usage{
 clusterforest(
-  fulldata,
+  observeddata,
   treedata,
   trees,
   simmatrix = NULL,
@@ -20,7 +20,7 @@ clusterforest(
 )
 }
 \arguments{
-\item{fulldata}{The full/original dataset}
+\item{observeddata}{The entire observed dataset}
 
 \item{treedata}{A list of dataframes on which the trees are based}
 
@@ -47,9 +47,9 @@ is 1, then a split on that predictor in tree A will be assumed equal to a split 
 
 \item{toclus}{The highest number of clusters for which the PAM algorithm should be run. Default=1.}
 
-\item{treecov}{A vector with the covariate value for each tree in the forest.}
+\item{treecov}{A vector/dataframe with the covariate value(s) for each tree in the forest (1 column per covariate).}
 
-\item{sameobs}{Are the same observations included in every tree data set?}
+\item{sameobs}{Are the same observations included in every tree data set? For example, in the case of subsamples or bootstrap samples, the answer is no. Default=FALSE}
 
 \item{seed}{A seed number that should be used for the multi start procedure (based on which initial medoids are assigned). Default=NULL.}
 }
@@ -63,7 +63,7 @@ The function returns an object of class clusterforest, with attributes:
 medoids only (see Sies & Van Mechelen,2020)}
 \item{withinsim}{Within cluster similarity for each solution (see Sies & Van Mechelen, 2020)}
 \item{treesimilarities}{Similarity matrix on which clustering was based}
-\item{treecov}{covariate value for each tree in the forest}
+\item{treecov}{covariate value(s) for each tree in the forest}
 \item{seed}{seed number that was used for the multi start procedure (based on which initial medoids were assigned)}
 }
 \description{
@@ -100,7 +100,7 @@ Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",  "skin",
 "bmi", "ped", "age"), y="type", Boots[[i]] ))
 
 #Clustering the trees in this forest
-ClusterForest<- clusterforest(fulldata=Pima.tr,treedata=Boots,trees=Trees,m=1,
+ClusterForest<- clusterforest(observeddata=Pima.tr,treedata=Boots,trees=Trees,m=1,
 fromclus=1, toclus=5, sameobs=FALSE)
 }
 \references{
