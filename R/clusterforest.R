@@ -33,6 +33,7 @@
 #' \item{medoidtrees}{the medoid trees}
 #' \item{clusters}{The cluster to which each tree in the forest is assigned}
 #' \item{avgsilwidth}{The average silhouette width for each solution (see Kaufman and Rousseeuw, 2009)}
+#' \item{accuracy}{For each solution, the accuracy of the predicted class labels based on the medoids.}
 #' \item{agreement}{For each solution, the agreement between the predicted class label for each observation based on the forest as a whole, and those based on the
 #' medoids only (see Sies & Van Mechelen,2020)}
 #' \item{withinsim}{Within cluster similarity for each solution (see Sies & Van Mechelen, 2020)}
@@ -262,6 +263,7 @@ clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL
   meds<- list(0)
   obj<- c(0)
   medsseeds<- list(0)
+  correct<- list(0)
 
   for (i in fromclus:toclus){
 
@@ -303,9 +305,18 @@ clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL
 
     gmed <- g[c(medoids[[i]])]
     w <- table(clusters[[i]])
-    medpred <- sapply(1:nrow(observeddata), function (k) levels(gmed[[1]])[which.max( c(sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[1], na.rm=TRUE),  sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[2], na.rm=TRUE) )   )] )
-
+    
+    
+    #unweighted
+    #medpred1 <- sapply(1:nrow(observeddata), function (k) levels(gmed[[1]])[which.max( c(sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[1], na.rm=TRUE),  sum(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[2], na.rm=TRUE) )   )] )
+    
+    #weighted
+    medpred <-sapply(1:nrow(observeddata), function (k) levels(gmed[[1]])[which.max( c(sum(as.numeric(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[1]) *w , na.rm=TRUE),  sum(as.numeric(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[2]) * w, na.rm=TRUE) )   )] )
+    
+    
     agreement[[i]] <- mean(forestpred == medpred)
+    
+    correct[[i]] <- mean(forest$observeddata[,Y][1]== medpred)
 
     sumw<- numeric(0)
     for (j in 1:i){
@@ -314,8 +325,13 @@ clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL
     sums[[i]]<- sum(sumw) / dim(treesimilarities)[1]
   }
 
-
-  value <- list(medoids = medoids, medoidtrees = mds, clusters=clusters, avgsilwidth=sil, agreement=agreement, withinsim=sums, treesimilarities=treesimilarities, treecov=treecov, seed=seed)
+  #Accuracy of forest as a whole and of marginally best class
+  medpred <-sapply(1:nrow(observeddata), function (k) levels(gmed[[1]])[which.max( c(sum(as.numeric(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[1]) *w , na.rm=TRUE),  sum(as.numeric(unlist(lapply(gmed, `[[`, k)) ==  levels(unlist(lapply(gmed, `[[`, k)))[2]) * w, na.rm=TRUE) )   )] )
+  
+  correct[[i+1]] <- mean(forest$observeddata[,Y][1]== forestpred)
+  correct[[i+2]] <- max(table(forest$observeddata[,Y][1]))/sum(table(forest$observeddata[,Y][1]))
+  
+  value <- list(medoids = medoids, medoidtrees = mds, clusters=clusters, avgsilwidth=sil, agreement=agreement, accuracy=correct, withinsim=sums, treesimilarities=treesimilarities, treecov=treecov, seed=seed)
   attr(value, "class") <- "clusterforest"
   return(value)
 
@@ -512,32 +528,32 @@ pamtree<- function(observeddata,treedata,Y,tree){
     if(class(treedata[,Y]) != "factor" ) {treedata[,Y] <- as.factor(treedata[,Y])}  #check whether y is a factor, if not-- make it a factor
     if(class(observeddata[,Y]) != "factor" ) {observeddata[,Y] <- as.factor(observeddata[,Y])}  #check whether y is a factor, if not-- make it a factor
 
-    if(class(tree)[1]== "glmtree"){
-      predresp <- predict(tree, newdata = observeddata, type="response")  #predicts response for every row of full data
-      predresp[predresp<0.5] <- levels(observeddata[,Y])[1]
-      predresp[predresp!=levels(observeddata[,Y])[1]] <- levels(observeddata[,Y])[2]
+    #if(class(tree)[1]== "glmtree"){
+      predresp <- predict(tree, newdata= observeddata, type="response")  #predicts response for every row of full data
+     # predresp[predresp<0.5] <- levels(observeddata[,Y])[1]
+    #  predresp[predresp!=levels(observeddata[,Y])[1]] <- levels(observeddata[,Y])[2]
       predresp <- factor(predresp, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
-    }else{
-      predresp <- predict(tree, newdata = observeddata, type="prob")  #predicts response for every row of full data
-      predresp <- predresp[,1]
-      predresp[predresp<0.5]<- levels(observeddata[,Y])[1]
-      predresp[predresp!= levels(observeddata[,Y])[1]]<- levels(observeddata[,Y])[2]
-      predresp <- factor(predresp, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
-    }
+    #}else{
+     # predresp <- predict(tree, newdata = observeddata, type="prob")  #predicts response for every row of full data
+      #predresp <- predresp[,1]
+      #predresp[predresp<0.5]<- levels(observeddata[,Y])[1]
+      #predresp[predresp!= levels(observeddata[,Y])[1]]<- levels(observeddata[,Y])[2]
+      #predresp <- factor(predresp, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
+    #}
 
 
-    if(class(tree)[1]== "glmtree"){
+    #if(class(tree)[1]== "glmtree"){
       predresptrain <- predict(tree, newdata = treedata, type="response")  #predicts response for every row of full data
-      predresptrain[predresptrain<0.5] <- levels(observeddata[,Y])[1]
-      predresptrain[predresptrain!=levels(observeddata[,Y])[1]] <- levels(observeddata[,Y])[2]
+     # predresptrain[predresptrain<0.5] <- levels(observeddata[,Y])[1]
+    #  predresptrain[predresptrain!=levels(observeddata[,Y])[1]] <- levels(observeddata[,Y])[2]
       predresptrain <- factor(predresptrain, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
-    }else{
-      predresptrain <- predict(tree, newdata = treedata, type="prob")  #predicts response for every row of full data
-      predresptrain <- predresptrain[,1]
-      predresptrain[predresptrain<0.5]<- levels(observeddata[,Y])[1]
-      predresptrain[predresptrain!= levels(observeddata[,Y])[1]]<- levels(observeddata[,Y])[2]
-      predresptrain <- factor(predresptrain, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
-    }
+    #}else{
+    #  predresptrain <- predict(tree, newdata = treedata, type="prob")  #predicts response for every row of full data
+    #  predresptrain <- predresptrain[,1]
+    #  predresptrain[predresptrain<0.5]<- levels(observeddata[,Y])[1]
+    #  predresptrain[predresptrain!= levels(observeddata[,Y])[1]]<- levels(observeddata[,Y])[2]
+    #  predresptrain <- factor(predresptrain, levels=c(levels(observeddata[,Y])[1], levels(observeddata[,Y])[2]))
+    #}
 
     prednodetrain <- predict(tree, newdata = treedata, type = "node")  #predicts node for every row of tree data
 

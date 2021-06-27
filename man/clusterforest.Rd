@@ -59,6 +59,7 @@ The function returns an object of class clusterforest, with attributes:
 \item{medoidtrees}{the medoid trees}
 \item{clusters}{The cluster to which each tree in the forest is assigned}
 \item{avgsilwidth}{The average silhouette width for each solution (see Kaufman and Rousseeuw, 2009)}
+\item{accuracy}{For each solution, the accuracy of the predicted class labels based on the medoids.}
 \item{agreement}{For each solution, the agreement between the predicted class label for each observation based on the forest as a whole, and those based on the
 medoids only (see Sies & Van Mechelen,2020)}
 \item{withinsim}{Within cluster similarity for each solution (see Sies & Van Mechelen, 2020)}

@@ -4,7 +4,7 @@
 \alias{plot.clusterforest}
 \title{Plot a clusterforest object}
 \usage{
-\method{plot}{clusterforest}(x, ..., solution = NULL, predictive_agreement = FALSE)
+\method{plot}{clusterforest}(x, ..., solution = NULL, predictive_plots = FALSE)
 }
 \arguments{
 \item{x}{A clusterforest object}
@@ -13,7 +13,8 @@
 
 \item{solution}{The solution to plot the medoid trees from. Default = NULL}
 
-\item{predictive_agreement}{Indicating whether a plot should be returned of the agreement between the class label
+\item{predictive_plots}{Indicating whether predictive plots should be returned: A plot showing the predictive accuracy
+when making predictions based on the medoid trees, and a plot of the agreement between the class label
 for each object predicted on the basis of the random forest as a whole versus based on the medoid trees. Default = FALSE.}
 }
 \description{

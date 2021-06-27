@@ -12,12 +12,13 @@
 #' of that solution are plotted.
 #' @param x A clusterforest object
 #' @param solution The solution to plot the medoid trees from. Default = NULL
-#' @param predictive_agreement Indicating whether a plot should be returned of the agreement between the class label
+#' @param predictive_plots Indicating whether predictive plots should be returned: A plot showing the predictive accuracy
+#' when making predictions based on the medoid trees, and a plot of the agreement between the class label
 #' for each object predicted on the basis of the random forest as a whole versus based on the medoid trees. Default = FALSE.
 #' @param ... Additional arguments
 #' @export
 #' @importFrom cluster pam
-#' @importFrom graphics axis plot
+#' @importFrom graphics axis plot mtext
 #' @import MASS
 #' @references \cite{Sies, A. & Van Mechelen I. (2020). C443: An R-package to see a forest for the trees. Journal of Classification.}
 #' @examples
@@ -50,13 +51,14 @@
 #' fromclus=1, toclus=5, sameobs=FALSE)
 #'plot(ClusterForest)
 #'plot(ClusterForest,2)
-plot.clusterforest <- function(x, ..., solution=NULL, predictive_agreement=FALSE) {
+plot.clusterforest <- function(x, ..., solution=NULL, predictive_plots=FALSE) {
   clusters=x$clusters
   medoids=x$medoids
   mds=x$medoidtrees
   sil=x$avgsilwidth
   sums=x$withinsim
   agreement=x$agreement
+  accuracy=x$accuracy
 
   if(is.null(solution)){
 
@@ -73,20 +75,28 @@ plot.clusterforest <- function(x, ..., solution=NULL, predictive_agreement=FALSE
     silplot <- silplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
 
 
-if(predictive_agreement==TRUE){
-  ## agreement
-  agreement[unlist(lapply(agreement , is.null))] <- NA
-  agreement<- unlist(agreement)
-  agreementplot <- plot(agreement, main= "Agreement in predicted labels by medoids vs forest ", xlab = "Number of clusters", ylab = "Agreement", xlim = c(1,length(medoids)), xaxt = "n", ylim=c(0.3,1) )
-  agreementplot<- agreementplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
-}
+  if(predictive_plots==TRUE){
+  ## accuracy
+    accuracy[unlist(lapply(accuracy , is.null))] <- NA
+    accuracy<- unlist(accuracy)
+    accuracyplot <- plot(accuracy, main= "Accuracy of predictions for each solution", xlab = "Number of clusters", ylab = "accuracy", xlim = c(1,length(medoids)), xaxt = "n", ylim=c(0.3,1) )
+    accuracyplot<- accuracyplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1)) + mtext(paste("Accuracy full forest = ", accuracy[length(accuracy)-1], ", proportion most frequent class = ", accuracy[length(accuracy)]))
+    
+
+    agreement[unlist(lapply(agreement , is.null))] <- NA
+    agreement<- unlist(agreement)
+    agreementplot <- plot(agreement, main= "Agreement in predicted labels by medoids vs forest ", xlab = "Number of clusters", ylab = "Agreement", xlim = c(1,length(medoids)), xaxt = "n", ylim=c(0.3,1) )
+    agreementplot<- agreementplot + axis(1, at = seq(from = 1, to = length(medoids), by = 1))
+  
+    }
   } else{
     for(i in 1:solution){
-    plot(x$medoidtrees[[solution]][[i]])
+      plot(x$medoidtrees[[solution]][[i]])
     }
   }
 }
-
+  
+  
 #' Print a clusterforest object
 #'
 #' A function that can be used to print a clusterforest object.
