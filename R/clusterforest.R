@@ -93,12 +93,12 @@ clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL
   }
 
   if(!'party' %in% class(trees[[1]])){
-    if(class(trees[[1]])[1] == "rpart" ||class(trees[[1]])[1] == "Weka_tree"|| class(trees[[1]])[1] == "XMLnode"){
-      trees<- lapply(1:length(trees), function (i) as.party(trees[[i]]))
-    } else{cat("trees must be a list of party tree objects or objects that can be coerced to party trees")
-      return(NULL)}
-
+    tryCatch(trees<- lapply(1:length(trees), function (i) as.party(trees[[i]])),
+             error=function(e){cat("trees must be a list of party tree objects or objects that can be coerced to party trees")})
   }
+    
+
+  
 
   if(typeof(treedata) != "list" || class(treedata[[1]]) != "data.frame") {
     cat("data must be a list of data frames on which the trees were grown")
