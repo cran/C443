@@ -6,7 +6,7 @@
 \usage{
 clusterforest(
   observeddata,
-  treedata,
+  treedata = NULL,
   trees,
   simmatrix = NULL,
   m = NULL,
@@ -22,7 +22,7 @@ clusterforest(
 \arguments{
 \item{observeddata}{The entire observed dataset}
 
-\item{treedata}{A list of dataframes on which the trees are based}
+\item{treedata}{A list of dataframes on which the trees are based. Not necessary if the data set is included in the tree object.}
 
 \item{trees}{A list of trees of class party, classes inheriting from party (e.g., glmtree), or classes that can be coerced to party (i.e., rpart, Weka_tree, XMLnode).}
 

@@ -8,7 +8,7 @@
 #' On this clusterforest object, several methods, such as plot, print and summary, can be used.
 #'
 #' @param observeddata The entire observed dataset
-#' @param treedata A list of dataframes on which the trees are based
+#' @param treedata A list of dataframes on which the trees are based. Not necessary if the data set is included in the tree object.
 #' @param trees A list of trees of class party, classes inheriting from party (e.g., glmtree), or classes that can be coerced to party (i.e., rpart, Weka_tree, XMLnode).
 #' @param simmatrix A similaritymatrix with the similarities between all trees. Should be square, symmetric and have ones on the diagonal. Default=NULL
 #' @param m Similarity measure that should be used to calculate similarities, in the case that no similarity matrix was provided by the user. Default=NULL.
@@ -84,24 +84,23 @@
 #'fromclus=1, toclus=5, sameobs=FALSE)
 
 
-clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL, tol=NULL, weight=NULL,fromclus=1, toclus=1, treecov=NULL, sameobs=FALSE, seed=NULL){
+clusterforest <- function (observeddata, treedata=NULL, trees, simmatrix=NULL, m=NULL, tol=NULL, weight=NULL,fromclus=1, toclus=1, treecov=NULL, sameobs=FALSE, seed=NULL){
   ############################## Check forest input #####################
   ###  Some checks whether correct forest information is provided by user
-  if(typeof(trees) != "list" ) {
-    cat("trees must be a list of party tree objects")
-    return(NULL)
-  }
-
-  if(!'party' %in% class(trees[[1]])){
-    tryCatch(trees<- lapply(1:length(trees), function (i) as.party(trees[[i]])),
-             error=function(e){cat("trees must be a list of party tree objects or objects that can be coerced to party trees")})
-  }
-    
-
   
-
-  if(typeof(treedata) != "list" || class(treedata[[1]]) != "data.frame") {
-    cat("data must be a list of data frames on which the trees were grown")
+  if(!is.null(trees[[1]]$data)){
+    treedt=lapply(1:length(trees), function(k) trees[[k]]$data)
+  }
+  
+  if(is.null(trees[[1]]$data)){
+  
+    if(is.null(treedata)){
+      cat("please submit treedata")
+      return(NULL)
+      }
+    
+    if(typeof(treedata) != "list" || class(treedata[[1]]) != "data.frame") {
+    cat("please submit correct treedata: a list of data frames on which the trees were grown")
     return(NULL)
   }
 
@@ -109,9 +108,23 @@ clusterforest <- function (observeddata, treedata, trees, simmatrix=NULL, m=NULL
     cat("the number of data frames provided must be the same as the number of trees")
     return(NULL)
   }
-
+    treedt=treedata
+  }
+  
+  
+  if(typeof(trees) != "list" ) {
+    cat("trees must be a list of party tree objects")
+    return(NULL)
+  }
+  
+  
+  if(!'party' %in% class(trees[[1]])){
+    tryCatch(trees<- lapply(1:length(trees), function (i) as.party(trees[[i]])),
+             error=function(e){cat("trees must be a list of party tree objects or objects that can be coerced to party trees")})
+  }
+  
   ## Turn user provided forest information into object of class forest.
-  forest <- list(partytrees = trees, treedata = treedata, observeddata=observeddata)
+  forest <- list(partytrees = trees, treedata = treedt, observeddata=observeddata)
 
   class(forest) <- append(class(forest), "forest")
 
