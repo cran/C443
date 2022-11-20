@@ -1,11 +1,11 @@
-1c5a56614957b3b8a0a4cbd8d0566676 *DESCRIPTION
-c5e458c5db6a83fa291cc1d175d6a18b *NAMESPACE
+36d5d756b581c6bdf7476443f19244b5 *DESCRIPTION
+b8970f20ec1c780338969b8796f4ebf5 *NAMESPACE
 3f60acd118ed73accc8e58cf8dcb8a83 *R/clusterMethods.R
-0e904192e1a992426792e456786689b2 *R/clusterforest.R
+6413d9b5405d8631400706e641e1a16d *R/clusterforest.R
 c36a9feebcafacc216eb0d0148e225ec *R/drugs.R
-ceb3cd9056eef2ac3cac2b6148687e23 *R/treesourceClusterMethod.R
+99ebad97889cef33991a57815d65576d *R/treesourceClusterMethod.R
 762dba482b35bd12a89201138bb12a32 *data/drugs.RData
-b93fc2bfacd10a138e013091d27ffa01 *man/clusterforest.Rd
+1c55450189ca8532a7f8110dc758cf3d *man/clusterforest.Rd
 997ed49efb60f2a3f260e7c61700fcf9 *man/clusters.Rd
 3e0244ed570353dfd23e390005afdf43 *man/clusters.clusterforest.Rd
 f564d8b47538981075b25a38509a0901 *man/clusters.default.Rd
