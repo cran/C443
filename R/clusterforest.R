@@ -49,8 +49,8 @@
 #' @importFrom igraph graph_from_incidence_matrix max_bipartite_match
 #' @importFrom stats complete.cases
 #' @importFrom methods is
-#' @importFrom randomForest getTree
 #' @importFrom ranger treeInfo
+#' @importFrom randomForest getTree
 #' @import MASS
 #' @import partykit
 #' @import rpart
@@ -62,7 +62,6 @@
 #' @examples
 #' require(MASS)
 #' require(rpart)
-#' require(ranger)
 #'#Function to draw a bootstrap sample from a dataset
 #'DrawBoots <- function(dataset, i){
 #'set.seed(2394 + i)
@@ -79,22 +78,15 @@
 #'  return(tree)
 #'}
 #'
-#'#Use functions to draw 20 boostrapsamples and grow a tree on each sample
+#'#Use functions to draw 10 boostrapsamples and grow a tree on each sample
 #'Boots<- lapply(1:10, function(k) DrawBoots(Pima.tr ,k))
 #'Trees <- lapply(1:10, function (i) GrowTree(x=c("npreg", "glu",  "bp",  "skin",
 #' "bmi", "ped", "age"), y="type", Boots[[i]] ))
 #'
 #'#Clustering the trees in this forest
 #'ClusterForest<- clusterforest(observeddata=Pima.tr,treedata=Boots,trees=Trees,m=1,
-#'fromclus=1, toclus=5, sameobs=FALSE)
+#'fromclus=1, toclus=3, sameobs=FALSE)
 #'
-#'#Example RandomForest
-#'Pima.tr.ranger <- ranger(type ~ ., data = Pima.tr, keep.inbag = TRUE, num.trees=20,
-#'max.depth=3)
-#'
-#'ClusterForest<- clusterforest(observeddata=Pima.tr,trees=Pima.tr.ranger,m=5,
-#'                            fromclus=1, toclus=2, sameobs=FALSE)
-
 
 clusterforest <- function (observeddata, treedata=NULL, trees, simmatrix=NULL, m=NULL, tol=NULL, weight=NULL,fromclus=1, toclus=1, treecov=NULL, sameobs=FALSE, seed=NULL){
   ############################## Check forest input #####################
@@ -618,6 +610,8 @@ pamtree<- function(observeddata,treedata,Y,tree){
     predresp <- rep(g1, length(y))
     predresp<- factor(predresp, levels=levels(treedata[,Y]))
     prednode <- rep(1, length(y))
+    prednodetrain <- rep(1, length(y))
+    predresptrain<- rep(g1, length(y))
   }
 
 
