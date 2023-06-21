@@ -1,10 +1,11 @@
 #' Mapping the tree clustering solution to a known source of variation underlying the forest
 #'
 #' A function that can be used to get insight into a clusterforest solution, in the case that there are known
-#' sources of variation underlying the forest.
+#' sources of variation underlying the forest. These known sources of variation must be included in the clusterforest object
+#' (and thus must be defined when running the clusterforest function)
 #' In case of a categorical covariate, it visualizes the number of trees from each value of the covariate that belong to each cluster.
 #' In case of a continuous covariate, it returns the mean and standard deviation of the covariate in each cluster.
-#' @param clusterforest The clusterforest object
+#' @param clusterforest The clusterforest object, indluding the treecov attribute.
 #' @param solution The solution
 #' @return \item{multiplot}{In case of categorical covariate, for each value of the covariate, a bar plot with the number of trees that belong to each cluster}
 #' \item{heatmap}{In case of a categorical covariate, a heatmap with for each value of the covariate, the number of trees that belong to each cluster}
@@ -51,7 +52,7 @@
 #'
 #'#Cluster the trees
 #'ClusterForest<- clusterforest(observeddata=drugs,treedata=Boots,trees=Trees,m=1,
-#'fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5), sameobs=FALSE)
+#'fromclus=2, toclus=2, treecov=rep(c("Amphet","Coke"),each=5), sameobs=FALSE, no_cores=2)
 #'
 #' #Link cluster result to known source of variation
 #' treesource(ClusterForest, 2)
